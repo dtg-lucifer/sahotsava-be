@@ -1,7 +1,6 @@
-import { Elysia } from "elysia";
+import { log, pino_logger } from "./middlewares"
+import express from "express"
 
-const app = new Elysia().get("/", () => "Hello Elysia").listen(3000);
+const app = express();
 
-console.log(
-  `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`
-);
+
