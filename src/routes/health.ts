@@ -6,6 +6,8 @@ healthcheck_router.get("/health", (req, res) => {
     res
         .status(200)
         .json({
-            msg: "success"
-        })
-})
+            msg: "success",
+        });
+});
+
+export { healthcheck_router };

@@ -2,6 +2,6 @@ global:
     scrape_interval: 15s
 
 scrape_configs:
-    - job_name: "everato-api"
+    - job_name: "sahotsava-api"
       static_configs:
           - targets: ["api:8080"]

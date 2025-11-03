@@ -1,6 +1,5 @@
 import winston from "winston";
 import morgan from "morgan";
-import { logger, pino } from "@bogeychan/elysia-logger";
 
 const levels = {
     error: 0,
@@ -31,26 +30,29 @@ const format = winston.format.combine(
     winston.format.colorize({ all: true }),
     winston.format.align(),
     winston.format.printf(
-        (info) => `[${info.timestamp}] ${info.level}: ${info.message}`
-    )
+        (info) => `[${info.timestamp}] ${info.level}: ${info.message}`,
+    ),
+    winston.format.splat(),
 );
 
 const jsonFormat = winston.format.combine(
     winston.format.timestamp(),
     winston.format.printf(
-        (info) => `[${info.timestamp}] ${info.level}: ${info.message}`
+        (info) => `[${info.timestamp}] ${info.level}: ${info.message}`,
     ),
-    winston.format.json()
+    winston.format.json(),
 );
 
 const transports = [
-    new winston.transports.Console(),
+    new winston.transports.Console({}),
     new winston.transports.File({
         filename: "./logs/error.log",
         level: "error",
         format: jsonFormat,
     }),
-    new winston.transports.File({ filename: "./logs/app.log" }),
+    new winston.transports.File({
+        filename: "./logs/app.log",
+    }),
 ];
 
 const log = winston.createLogger({
@@ -72,8 +74,8 @@ const skip = () => {
 };
 
 const winston_logger = morgan(
-    ":remote-addr :method :url :status - :response-time ms",
-    { stream, skip }
+    ':remote-addr ":method :url HTTP/:http-version" :status - :response-time ms - :res[X-Request-ID]',
+    { stream, skip },
 );
 
-export { info, warn, debug, error, log, winston_logger };
+export { debug, error, info, log, warn, winston_logger };
