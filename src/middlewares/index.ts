@@ -1,10 +1,8 @@
-export {
-    log,
-    error,
-    info,
-    warn,
-    debug,
-    winston_logger
-} from "./logger"
+export { debug, error, info, log, warn, winston_logger } from "./logger";
 
-export { requestid_middleware } from "./request_id"
+export { requestid_middleware } from "./request_id";
+
+export {
+    type AppDependencies,
+    createDependencyInjectionMiddleware,
+} from "./dependency_injection";

@@ -8,7 +8,7 @@ dev:
 
 # Run the database along side the redis cache
 db:
-	sudo docker compose -f docker/docker-compose.yaml up postgres redis
+	docker compose -f docker/docker-compose.yaml up postgres redis
 
 # Clean the log files along side the prisma generated clients
 clean:

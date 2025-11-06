@@ -1,14 +1,19 @@
+import cors from "cors";
 import type { Express } from "express";
 import express from "express";
-import cors from "cors";
-import helmet from "helmet";
 import rateLimit from "express-rate-limit";
+import helmet from "helmet";
 import { createClient, RedisClientType } from "redis";
 
-import { log, requestid_middleware, winston_logger } from "./middlewares";
+import { PrismaClient } from "./generated/prisma/client";
+import {
+    createDependencyInjectionMiddleware,
+    log,
+    requestid_middleware,
+    winston_logger,
+} from "./middlewares";
 import { healthcheck_router } from "./routes";
 import { Cache } from "./utils/cache";
-import { PrismaClient } from "./generated/prisma/client";
 
 export interface ServerCfg {
     port: number;
@@ -23,6 +28,17 @@ export class Server {
     config: ServerCfg; // Server configuration
     prisma: PrismaClient | null; // PrismaClient instance
     redis: RedisClientType | null; // Redis client instance
+
+    constructor(cfg: Partial<ServerCfg>) {
+        this.app = express();
+        this.config = Object.assign<ServerCfg, Partial<ServerCfg>>(
+            this.#defaultConfig(),
+            cfg,
+        );
+        this.prisma = null;
+        this.redis = null;
+    }
+
     #defaultConfig(): ServerCfg {
         return {
             port: 8998,
@@ -33,16 +49,6 @@ export class Server {
                 Bun.env.PORT || "8989"
             }`,
         };
-    }
-
-    constructor(cfg: Partial<ServerCfg>) {
-        this.app = express();
-        this.config = Object.assign<ServerCfg, Partial<ServerCfg>>(
-            this.#defaultConfig(),
-            cfg,
-        );
-        this.prisma = null;
-        this.redis = null;
     }
 
     //#region Server setup
@@ -73,9 +79,9 @@ export class Server {
         const missing = required.filter((key) => !Bun.env[key]);
 
         if (missing.length > 0) {
-            const error = `Missing required environment variables: ${
-                missing.join(", ")
-            }`;
+            const error = `Missing required environment variables: ${missing.join(
+                ", ",
+            )}`;
             log.error(error);
             throw new Error(error);
         }
@@ -124,9 +130,8 @@ export class Server {
                     enableTrace: true,
                 },
             });
-            this.redis.on(
-                "error",
-                (err) => log.error("Redis Client Error", err),
+            this.redis.on("error", (err) =>
+                log.error("Redis Client Error", err),
             );
 
             await this.redis.connect();
@@ -136,11 +141,22 @@ export class Server {
             throw err;
         }
     }
+
     // Setup routes
     #setupRoutes() {
         this.app.use(this.config.api_prefix, healthcheck_router); // Healthcheck route
     }
+
     #setupMiddlewares() {
+        // Body parsing with size limits
+        this.app.use(express.json({ limit: "10mb" }));
+        this.app.use(
+            express.urlencoded({
+                extended: true,
+                limit: "10mb",
+            }),
+        );
+
         // Security headers with Helmet
         this.app.use(
             helmet({
@@ -157,21 +173,14 @@ export class Server {
         );
 
         // Rate limiting
-        const limiter = rateLimit({
-            windowMs: 15 * 60 * 1000, // 15 minutes
-            max: 100, // Limit each IP to 100 requests per windowMs
-            message: "Too many requests from this IP, please try again later.",
-            standardHeaders: true,
-            legacyHeaders: false,
-        });
-        this.app.use(limiter);
-
-        // Body parsing with size limits
-        this.app.use(express.json({ limit: "10mb" }));
         this.app.use(
-            express.urlencoded({
-                extended: true,
-                limit: "10mb",
+            rateLimit({
+                windowMs: 15 * 60 * 1000, // 15 minutes
+                max: 100, // Limit each IP to 100 requests per windowMs
+                message:
+                    "Too many requests from this IP, please try again later.",
+                standardHeaders: true,
+                legacyHeaders: false,
             }),
         );
 
@@ -183,19 +192,26 @@ export class Server {
                 allowedHeaders: ["Content-Type", "Authorization"],
                 preflightContinue: false,
                 optionsSuccessStatus: 204,
-                methods: [
-                    "GET",
-                    "POST",
-                    "PUT",
-                    "DELETE",
-                    "OPTIONS",
-                ],
+                methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
             }),
         );
 
         // Logging and request tracking
         this.app.use(winston_logger);
         this.app.use(requestid_middleware);
+
+        // Dependency injection - must be registered after other middlewares
+        // but before routes to ensure dependencies are available in all route handlers
+        if (this.prisma && this.redis) {
+            this.app.use(
+                createDependencyInjectionMiddleware(this.prisma, this.redis),
+            );
+            log.info("Dependency injection middleware registered");
+        } else {
+            log.warn(
+                "Prisma or Redis not initialized. Dependency injection middleware not registered.",
+            );
+        }
     }
 
     // @NOTE End Private methods

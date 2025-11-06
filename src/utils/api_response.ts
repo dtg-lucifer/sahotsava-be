@@ -1,4 +1,3 @@
-import { response } from "express";
 import { log } from "../middlewares";
 
 export class AuthError extends Error {
@@ -36,3 +35,28 @@ export class APIError extends AuthError {
         );
     }
 }
+
+/**
+ * Standardized API Response Helper
+ */
+export const api_response = {
+    /**
+     * Success response
+     */
+    success: <T>(message: string, data?: T, statusCode: number = 200) => ({
+        success: true,
+        message,
+        data,
+        statusCode,
+    }),
+
+    /**
+     * Error response
+     */
+    error: (message: string, statusCode: number = 500, errors?: any) => ({
+        success: false,
+        message,
+        errors,
+        statusCode,
+    }),
+};

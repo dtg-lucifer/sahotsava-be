@@ -2,6 +2,7 @@
   "name": "sahotsava-backend",
   "version": "1.0",
   "scripts": {
+    "start": "bun run src/index.ts",
     "dev": "bun run --watch src/index.ts",
     "prisma:generate": "dotenv -e .env -- prisma generate",
     "prisma:migrate": "dotenv -e .env -- prisma migrate dev",
