@@ -79,11 +79,9 @@ export class Server {
         const missing = required.filter((key) => !Bun.env[key]);
 
         if (missing.length > 0) {
-            const error = `Missing required environment variables: ${
-                missing.join(
-                    ", ",
-                )
-            }`;
+            const error = `Missing required environment variables: ${missing.join(
+                ", ",
+            )}`;
             log.error(error);
             throw new Error(error);
         }
@@ -132,9 +130,8 @@ export class Server {
                     enableTrace: true,
                 },
             });
-            this.redis.on(
-                "error",
-                (err) => log.error("Redis Client Error", err),
+            this.redis.on("error", (err) =>
+                log.error("Redis Client Error", err),
             );
 
             await this.redis.connect();

@@ -1,150 +1,160 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+    provider = "prisma-client"
+    output   = "../src/generated/prisma"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
 }
 
 enum ROLE {
-  SUPER_ADMIN
-  DOMAIN_LEAD
-  CAMPUS_AMBASSADOR
-  CHECKIN_CREW
+    SUPER_ADMIN
+    DOMAIN_LEAD
+    CAMPUS_AMBASSADOR
+    CHECKIN_CREW
 }
 
 enum REGISTRATION_STATUS {
-  PENDING
-  ACCEPTED
-  REJECTED
+    PENDING
+    ACCEPTED
+    REJECTED
 }
 
 enum TICKET_STATUS {
-  ISSUED
-  USED
-  CANCELLED
+    ISSUED
+    USED
+    CANCELLED
 }
 
 model User {
-  id                     String         @id @default(uuid())
-  uid                    String         @unique @db.VarChar(50)
-  name                   String         @db.VarChar(255)
-  email                  String         @unique @db.VarChar(255)
-  phone                  String?        @db.VarChar(20)
-  password               String         @db.VarChar(255)
-  role                   ROLE
-  is_verified            Boolean        @default(false)
-  verification_token     String?        @unique @db.VarChar(255)
-  reset_token            String?        @unique @db.VarChar(255)
-  reset_token_expires_at DateTime?
-  createdAt              DateTime       @default(now())
-  updatedAt              DateTime       @updatedAt
-  deletedAt              DateTime?
-  Campus                 Campus?        @relation(fields: [campusId], references: [id], onDelete: SetNull)
-  campusId               String?
-  ca_registrations       Registration[] @relation("CampusAmbassador")
-  accepted_registrations Registration[] @relation("AcceptedBy")
-  rejected_registrations Registration[] @relation("RejectedBy")
-  lead_event             Event?         @relation("DomainLead")
-  issued_tickets         Ticket[]       @relation("DomainLeadIssues")
-  checked_in_tickets     Ticket[]       @relation("CheckedInBy")
+    id                     String         @id @default(uuid())
+    uid                    String         @unique @db.VarChar(50)
+    name                   String         @db.VarChar(255)
+    email                  String         @unique @db.VarChar(255)
+    phone                  String?        @db.VarChar(20)
+    password               String         @db.VarChar(255)
+    role                   ROLE
+    is_verified            Boolean        @default(false)
+    verification_token     String?        @unique @db.VarChar(255)
+    reset_token            String?        @unique @db.VarChar(255)
+    reset_token_expires_at DateTime?
+    createdAt              DateTime       @default(now())
+    updatedAt              DateTime       @updatedAt
+    deletedAt              DateTime?
+    campus                 Campus?        @relation(fields: [campusId], references: [id], onDelete: SetNull)
+    campusId               String?
+    ca_registrations       Registration[] @relation("CampusAmbassador")
+    accepted_registrations Registration[] @relation("AcceptedBy")
+    rejected_registrations Registration[] @relation("RejectedBy")
+    lead_event             Event?         @relation("DomainLead")
+    issued_tickets         Ticket[]       @relation("DomainLeadIssues")
+    checked_in_tickets     Ticket[]       @relation("CheckedInBy")
+    // --------------------------
 
-  @@index([email])
-  @@index([role, is_verified])
-  @@index([campusId])
-  @@index([role])
-  @@map("users")
+    @@index([email])
+    @@index([role, is_verified])
+    @@index([campusId])
+    @@index([role])
+    // --------------------------
+    @@map("users")
 }
 
 model Campus {
-  id              String    @id @default(uuid())
-  uid             String    @unique @db.VarChar(50)
-  name            String    @unique @db.VarChar(255)
-  max_ambassadors Int?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  deletedAt       DateTime?
-  ambassadors     User[]
+    id              String    @id @default(uuid())
+    uid             String    @unique @db.VarChar(50)
+    name            String    @unique @db.VarChar(255)
+    max_ambassadors Int?
+    createdAt       DateTime  @default(now())
+    updatedAt       DateTime  @updatedAt
+    deletedAt       DateTime?
+    ambassadors     User[]
+    // --------------------------
 
-  @@index([name])
-  @@index([uid])
-  @@map("campuses")
+    @@index([name])
+    @@index([uid])
+    // --------------------------
+    @@map("campuses")
 }
 
 model Event {
-  id                String         @id @default(uuid())
-  slug              String         @unique @db.VarChar(100)
-  name              String         @db.VarChar(255)
-  description       String         @db.Text
-  thumb_url         String         @db.VarChar(500)
-  max_registrations Int?
-  domain_lead       User           @relation("DomainLead", fields: [domain_lead_id], references: [id], onDelete: Restrict)
-  domain_lead_id    String         @unique
-  date              DateTime
-  createdAt         DateTime       @default(now())
-  updatedAt         DateTime       @updatedAt
-  deletedAt         DateTime?
-  registrations     Registration[]
-  tickets           Ticket[]
+    id                String         @id @default(uuid())
+    slug              String         @unique @db.VarChar(100)
+    name              String         @db.VarChar(255)
+    description       String         @db.Text
+    thumb_url         String         @db.VarChar(500)
+    max_registrations Int?
+    domain_lead       User           @relation("DomainLead", fields: [domain_lead_id], references: [id], onDelete: Restrict)
+    domain_lead_id    String         @unique
+    date              DateTime
+    createdAt         DateTime       @default(now())
+    updatedAt         DateTime       @updatedAt
+    deletedAt         DateTime?
+    registrations     Registration[]
+    tickets           Ticket[]
+    // --------------------------
 
-  @@index([domain_lead_id])
-  @@index([slug])
-  @@index([date])
-  @@index([createdAt])
-  @@map("events")
+    @@index([domain_lead_id])
+    @@index([slug])
+    @@index([date])
+    @@index([createdAt])
+    // --------------------------
+    @@map("events")
 }
 
 model Registration {
-  p_name       String              @db.VarChar(255)
-  p_email      String              @db.VarChar(255)
-  p_phone      String?             @db.VarChar(20)
-  ca           User                @relation("CampusAmbassador", fields: [caId], references: [id], onDelete: Cascade)
-  caId         String
-  event        Event               @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  eventId      String
-  status       REGISTRATION_STATUS @default(PENDING)
-  accepted_by  User?               @relation("AcceptedBy", fields: [acceptedById], references: [id], onDelete: SetNull)
-  acceptedById String?
-  rejected_by  User?               @relation("RejectedBy", fields: [rejectedById], references: [id], onDelete: SetNull)
-  rejectedById String?
-  createdAt    DateTime            @default(now())
-  updatedAt    DateTime            @updatedAt
+    p_name       String              @db.VarChar(255)
+    p_email      String              @db.VarChar(255)
+    p_phone      String?             @db.VarChar(20)
+    ca           User                @relation("CampusAmbassador", fields: [caId], references: [id], onDelete: Cascade)
+    caId         String
+    event        Event               @relation(fields: [eventId], references: [id], onDelete: Cascade)
+    eventId      String
+    status       REGISTRATION_STATUS @default(PENDING)
+    accepted_by  User?               @relation("AcceptedBy", fields: [acceptedById], references: [id], onDelete: SetNull)
+    acceptedById String?
+    rejected_by  User?               @relation("RejectedBy", fields: [rejectedById], references: [id], onDelete: SetNull)
+    rejectedById String?
+    createdAt    DateTime            @default(now())
+    updatedAt    DateTime            @updatedAt
+    // --------------------------
 
-  @@id([caId, eventId, p_email])
-  @@index([eventId])
-  @@index([caId])
-  @@index([status, eventId])
-  @@index([p_email])
-  @@index([acceptedById])
-  @@index([rejectedById])
-  @@map("registrations")
+    @@id([caId, eventId, p_email])
+    @@index([eventId])
+    @@index([caId])
+    @@index([status, eventId])
+    @@index([p_email])
+    @@index([acceptedById])
+    @@index([rejectedById])
+    // --------------------------
+    @@map("registrations")
 }
 
 model Ticket {
-  id                    String        @id @default(uuid())
-  uid                   String        @unique @db.VarChar(50)
-  p_name                String        @db.VarChar(255)
-  p_email               String        @db.VarChar(255)
-  p_phone               String?       @db.VarChar(20)
-  status                TICKET_STATUS @default(ISSUED)
-  event                 Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  eventId               String
-  issued_by_domain_lead User          @relation("DomainLeadIssues", fields: [issuedByDomainLeadId], references: [id], onDelete: Restrict)
-  issuedByDomainLeadId  String
-  checked_in_at         DateTime?
-  checked_in_by         User?         @relation("CheckedInBy", fields: [checkedInById], references: [id], onDelete: SetNull)
-  checkedInById         String?
-  createdAt             DateTime      @default(now())
-  updatedAt             DateTime      @updatedAt
+    id                    String        @id @default(uuid())
+    uid                   String        @unique @db.VarChar(50)
+    p_name                String        @db.VarChar(255)
+    p_email               String        @db.VarChar(255)
+    p_phone               String?       @db.VarChar(20)
+    status                TICKET_STATUS @default(ISSUED)
+    event                 Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+    eventId               String
+    issued_by_domain_lead User          @relation("DomainLeadIssues", fields: [issuedByDomainLeadId], references: [id], onDelete: Restrict)
+    issuedByDomainLeadId  String
+    checked_in_at         DateTime?
+    checked_in_by         User?         @relation("CheckedInBy", fields: [checkedInById], references: [id], onDelete: SetNull)
+    checkedInById         String?
+    createdAt             DateTime      @default(now())
+    updatedAt             DateTime      @updatedAt
+    // --------------------------
 
-  @@index([uid])
-  @@index([eventId])
-  @@index([p_email])
-  @@index([eventId, createdAt])
-  @@index([issuedByDomainLeadId])
-  @@index([status, eventId])
-  @@index([checkedInById])
-  @@map("tickets")
+    @@index([uid])
+    @@index([eventId])
+    @@index([p_email])
+    @@index([eventId, createdAt])
+    @@index([issuedByDomainLeadId])
+    @@index([status, eventId])
+    @@index([checkedInById])
+    // --------------------------
+    @@map("tickets")
 }
