@@ -1,6 +1,6 @@
 import { Server, ServerCfg } from "./server";
 import { log } from "./middlewares";
-import { shutdown_handler } from "./utils/shutdown_handler";
+import { shutdown_handler } from "./lib/shutdown";
 import { Cache } from "./utils/cache";
 import dotenv from "dotenv";
 

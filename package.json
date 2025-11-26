@@ -1,34 +1,45 @@
 {
-  "name": "sahotsava-backend",
-  "version": "1.0",
-  "scripts": {
-    "start": "bun run src/index.ts",
-    "dev": "bun run --watch src/index.ts",
-    "prisma:generate": "dotenv -e .env -- prisma generate",
-    "prisma:migrate": "dotenv -e .env -- prisma migrate dev",
-    "prisma:studio": "dotenv -e .env -- prisma studio"
-  },
-  "dependencies": {
-    "@prisma/client": "^6.18.0",
-    "cors": "^2.8.5",
-    "dotenv": "^17.2.3",
-    "express": "^5.1.0",
-    "express-rate-limit": "^8.2.1",
-    "helmet": "^8.1.0",
-    "morgan": "^1.10.1",
-    "prisma": "^6.18.0",
-    "redis": "^5.9.0",
-    "uuid": "^13.0.0",
-    "winston": "^3.18.3"
-  },
-  "devDependencies": {
-    "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.5",
-    "@types/express-rate-limit": "^6.0.2",
-    "@types/morgan": "^1.9.10",
-    "@types/uuid": "^11.0.0",
-    "bun-types": "latest",
-    "dotenv-cli": "^11.0.0"
-  },
-  "module": "src/index.ts"
+	"name": "sahotsava-backend",
+	"version": "1.0",
+	"scripts": {
+		"start": "bun run src/index.ts",
+		"dev": "bun run --watch src/index.ts",
+		"lint": "eslint 'src/**/*.ts' --fix",
+		"prisma:generate": "dotenv -e .env -- prisma generate",
+		"prisma:migrate": "dotenv -e .env -- prisma migrate dev",
+		"prisma:studio": "dotenv -e .env -- prisma studio",
+		"db:seed": "dotenv -e .env -- bun run src/db/seed.ts"
+	},
+	"dependencies": {
+		"@prisma/adapter-pg": "^7.0.1",
+		"@prisma/client": "^7.0.1",
+		"bcrypt": "^6.0.0",
+		"cors": "^2.8.5",
+		"csv-parser": "^3.2.0",
+		"dotenv": "^17.2.3",
+		"express": "^5.1.0",
+		"express-rate-limit": "^8.2.1",
+		"helmet": "^8.1.0",
+		"morgan": "^1.10.1",
+		"prisma": "^7.0.1",
+		"redis": "^5.9.0",
+		"uuid": "^13.0.0",
+		"winston": "^3.18.3"
+	},
+	"devDependencies": {
+		"@eslint/eslintrc": "^3.3.1",
+		"@types/bcrypt": "^6.0.0",
+		"@types/cors": "^2.8.19",
+		"@types/express": "^5.0.5",
+		"@types/express-rate-limit": "^6.0.2",
+		"@types/morgan": "^1.9.10",
+		"@types/uuid": "^11.0.0",
+		"@typescript-eslint/eslint-plugin": "^8.46.3",
+		"@typescript-eslint/parser": "^8.46.3",
+		"bun-types": "latest",
+		"dotenv-cli": "^11.0.0",
+		"eslint": "^9.39.1",
+		"eslint-config-prettier": "^10.1.8"
+	},
+	"module": "src/index.ts"
 }
