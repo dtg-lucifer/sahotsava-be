@@ -17,10 +17,18 @@ import { generatePassword } from "../lib/password";
 import { generateUID } from "../lib/uid";
 import { log } from "../middlewares";
 import { EventCSVRow, UserCSVRow } from "../utils/types";
+import { PrismaPg } from "@prisma/adapter-pg";
 
 dotenv.config();
 
-const prisma = new PrismaClient();
+const adapter = new PrismaPg({ connectionString: Bun.env.DATABASE_URL! });
+const prisma = new PrismaClient({
+	adapter: adapter,
+	log: [
+		{ emit: "event", level: "error" },
+		{ emit: "event", level: "warn" },
+	],
+});
 
 // File paths
 const usersFilePath = path.join(__dirname, "data", "users.csv");
@@ -67,7 +75,9 @@ async function seedUsers() {
 					log.info("Processing users CSV...");
 
 					// First, collect unique campus names and seed them
-					const campusNames = new Set(users.map((u) => u.Campus).filter(Boolean));
+					const campusNames = new Set(
+						users.map((u) => u.Campus).filter(Boolean),
+					);
 					await seedCampuses(campusNames);
 
 					// Now seed users
@@ -85,7 +95,9 @@ async function seedUsers() {
 
 						// Validate role
 						if (!Object.keys(ROLE).includes(Role)) {
-							log.warn(`Invalid role ${Role} for user ${Email}, skipping...`);
+							log.warn(
+								`Invalid role ${Role} for user ${Email}, skipping...`,
+							);
 							continue;
 						}
 
@@ -106,10 +118,15 @@ async function seedUsers() {
 								break;
 						}
 
-						const password = generatePassword(prefix, First_Name, Timestamp);
-						const fullName = `${First_Name} ${Middle_Name} ${Last_Name}`
-							.replace(/\s+/g, " ")
-							.trim();
+						const password = generatePassword(
+							prefix,
+							First_Name,
+							Timestamp,
+						);
+						const fullName =
+							`${First_Name} ${Middle_Name} ${Last_Name}`
+								.replace(/\s+/g, " ")
+								.trim();
 
 						// Find campus if provided
 						let campusId: string | undefined;
@@ -142,7 +159,9 @@ async function seedUsers() {
 							},
 						});
 
-						log.info(`✓ User seeded: ${Email} (${Role}) - Password: ${password}`);
+						log.info(
+							`✓ User seeded: ${Email} (${Role}) - Password: ${password}`,
+						);
 					}
 
 					log.info(`✓ ${users.length} users processed successfully`);
@@ -165,7 +184,9 @@ async function seedEvents() {
 
 		// Check if file exists
 		if (!fs.existsSync(eventsFilePath)) {
-			log.warn("⛌ Warning: events.csv file not found, skipping event seeding");
+			log.warn(
+				"⛌ Warning: events.csv file not found, skipping event seeding",
+			);
 			resolve();
 			return;
 		}
@@ -236,7 +257,9 @@ async function seedEvents() {
 						log.info(`✓ Event seeded: ${Name}`);
 					}
 
-					log.info(`✓ ${events.length} events processed successfully`);
+					log.info(
+						`✓ ${events.length} events processed successfully`,
+					);
 					resolve();
 				} catch (error) {
 					log.error("Error processing events:", error);
