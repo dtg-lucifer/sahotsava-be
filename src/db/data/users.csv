@@ -1,2 +1,33 @@
-Timestamp,First_Name,Middle_Name,Last_Name,Email,Phone,Campus,Role
-10/11/2025 18:39:50,Piush,,Bose,dev.bosepiush@gmail.com,8910530975,TIU,SUPER_ADMIN
+﻿First_Name,Middle_Name,Last_Name,Email,Phone,Campus,Role,Event_Category,Associated_Teams
+Piush,,Bose,dev.bosepiush@gmail.com,8910530975,TIU,SUPER_ADMIN,ALL_ACCESS,MAIN_EVENT
+Anindo,Neel,Dutta,and2409@gmail.com,8889990249,TIU,SUPER_ADMIN,ALL_ACCESS,MAIN_EVENT
+Chandni,,Das,chandnidas400@gmail.com,9883211477,TIU,DOMAIN_LEAD,FASHION_EVENTS,Team Phoenix(Fashion Team)
+Rishita,,Pal,rishitapal1328@gmail.com,9163459742,TIU,DOMAIN_LEAD,FASHION_EVENTS,Team Phoenix(Fashion Team)
+Sarnov,,Roy,lifesarnovroy.14581@gmail.com,8250227675,TIU,DOMAIN_LEAD,DANCING_EVENTS,Western Dance Community
+Dwipjoy,,Deb,dwipjoy04@gmail.com,9862544676,TIU,DOMAIN_LEAD,DANCING_EVENTS,Western Dance Community
+Prajukta,,Chakraborty,chakrabortyprajukta4@gmail.com,6297587969,TIU,DOMAIN_LEAD,DANCING_EVENTS,Team Nrityaksha (Eastern Dance Team)
+Shreyasi,,Chatterjee,shreyasichatterjee32@gmail.com,9331865118,TIU,DOMAIN_LEAD,"DANCING_EVENTS, LITERARY_EVENTS","Team Paperback Society (Literary Club), Team Nrityaksha (Eastern Dance Team)"
+Neezar,,Hossain,neezarhossain202@gmail.com,8910647812,TIU,DOMAIN_LEAD,DANCING_EVENTS,Team Nrityaksha (Eastern Dance Team)
+Subhasish,,Roy,subhasishroy434@gmail.com,6296002542,TIU,DOMAIN_LEAD,DRAMA_EVENTS,Team Dhrubotara (Drama Team)
+Tithi,,Chakraborty,tithic20@gmail.com,8768574145,TIU,DOMAIN_LEAD,"DRAMA_EVENTS, LITERARY_EVENTS","Team Paperback Society (Literary Club), Team Dhrubotara (Drama Team)"
+Aastha,,Singh,aasthasingh0628@gmail.com,9038988326,TIU,DOMAIN_LEAD,LITERARY_EVENTS,Team Dhrubotara (Drama Team)
+Sulagna,,Das,sulagnadas614@gmail.com,7439509364,TIU,DOMAIN_LEAD,DANCING_EVENTS,Western Dance Community
+Ansu,,Nag,ansunag62@gmail.com,9153241481,TIU,DOMAIN_LEAD,"PHOTOGRAPHY_EVENTS, MOVIE_EVENTS",Team Chitraka (Photography Team)
+Rudra,N,Mondal,rudranarayanmondal69@gmail.com,8617555355,TIU,DOMAIN_LEAD,MOVIE_EVENTS,Team Chitraka (Movie Team)
+Reck,,Roy,reck.roy245@gmail.com,8272915712,TIU,DOMAIN_LEAD,MOVIE_EVENTS,Team Chitraka (Movie Team)
+Pritha,,Basak,prismic.couture@gmail.com,7699692411,TIU,DOMAIN_LEAD,ART_EVENTS,Team Chitraka (Art & Craft Team)
+Debdatta,,Ghosh,debdattaghosh5@gmail.com,9748694215,TIU,DOMAIN_LEAD,MUSIC_EVENTS,Swarakriti (Music Team)
+Ipsita,,Saha,sahaipsita0@gmail.com,6289655231,TIU,DOMAIN_LEAD,MUSIC_EVENTS,Swarakriti (Music Team)
+Pallab,,Ghosal,pallabghosaltiusl2003@gmail.com,7595914259,TIU,DOMAIN_LEAD,MUSIC_EVENTS,"Swarakriti (Music Team), Team Checkmate (Band Team)"
+Ahir,,Patra,ahirpatra@gmail.com,9593962154,TIU,DOMAIN_LEAD,MUSIC_EVENTS,"Swarakriti (Music Team), Team Checkmate (Band Team)"
+Shreyosee,,Dhar,shreyoseedhar04@gmail.com,8584861746,TIU,DOMAIN_LEAD,LITERARY_EVENTS,Team Paperback Society (Literary Club)
+Richa,,Khemka,richak3113@gmail.com,6290670521,TIU,DOMAIN_LEAD,LITERARY_EVENTS,Team Paperback Society (Literary Club)
+Rohit,,Bera,thisisrohitbee@gmail.com,9163734807,TIU,DOMAIN_LEAD,LITERARY_EVENTS,Team Paperback Society (Literary Club)
+Anirbaan,,Sarkar,anirbaandsarkar@gmail.com,8910640567,TIU,DOMAIN_LEAD,DESIGNING_EVENTS,Team Chitraka (Designing Team)
+Ashoke,,Maity,ashokemaity092@gmail.com,8597347423,TIU,SUPER_ADMIN,ALL_ACCESS,MAIN_EVENT
+Shrayan,,Misra,mishrashrayan07@gmail.com,7047480580,TIU,SUPER_ADMIN,ALL_ACCESS,MAIN_EVENT
+Ishan,,Sir,ishan.g@technoindiaeducation.com,9999999999,TIU,SUPER_ADMIN,ALL_ACCESS,MAIN_EVENT
+Sagnik,,Sir,sagnik.r@technoindiaeducation.com,9999999999,TIU,SUPER_ADMIN,ALL_ACCESS,MAIN_EVENT
+Habibur,,Sir,habibur.r@technoindiaeducation.com,9999999999,TIU,SUPER_ADMIN,ALL_ACCESS,MAIN_EVENT
+Partha,,Sir,partho.m@technoindiaeducation.com,9999999999,TIU,SUPER_ADMIN,ALL_ACCESS,MAIN_EVENT
+Abhinandan,,Sir,abhinandan.b@technoindiaeducation.com,9999999999,TIU,SUPER_ADMIN,ALL_ACCESS,MAIN_EVENT

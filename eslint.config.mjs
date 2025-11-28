@@ -39,7 +39,7 @@ export default [
 			// Use strict equality
 			eqeqeq: ["error", "always"],
 			// Always use braces for blocks
-			curly: "warn",
+			curly: "none",
 			// Prevent common async mistakes
 			"no-async-promise-executor": "error",
 			"no-return-await": "error",

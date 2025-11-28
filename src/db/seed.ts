@@ -12,7 +12,7 @@ import dotenv from "dotenv";
 import fs from "fs";
 import path from "path";
 
-import { PrismaClient, ROLE } from "../generated/prisma/client";
+import { EVENT_CATEGORY, PrismaClient, ROLE } from "../generated/prisma/client";
 import { generatePassword } from "../lib/password";
 import { generateUID } from "../lib/uid";
 import { log } from "../middlewares";
@@ -31,8 +31,58 @@ const prisma = new PrismaClient({
 });
 
 // File paths
-const usersFilePath = path.join(__dirname, "data", "users.csv");
+const usersFilePath = path.join(__dirname, "data", "users_clean.csv");
 const eventsFilePath = path.join(__dirname, "data", "events.csv");
+
+// Helper to parse comma-separated values with proper trimming
+function parseCSVField(field: string): string[] {
+	if (!field || field.trim() === "") return [];
+	// Remove surrounding quotes if present
+	const cleanedField = field.replace(/^["']|["']$/g, "").trim();
+	if (!cleanedField) return [];
+
+	return cleanedField
+		.split(",")
+		.map((item) => item.trim())
+		.filter((item) => item.length > 0);
+}
+
+// Helper to extract team names from complex format like "Team Phoenix(Fashion Team)"
+function parseTeamNames(teamsString: string): string[] {
+	if (!teamsString || teamsString.trim() === "") return [];
+
+	// Remove surrounding quotes if present
+	const cleanedString = teamsString.replace(/^["']|["']$/g, "").trim();
+	if (!cleanedString) return [];
+
+	const teams = cleanedString
+		.split(",")
+		.map((team) => {
+			// Extract team name before parenthesis or use full string if no parenthesis
+			const match = team.trim().match(/^([^(]+)/);
+			return match ? match[1].trim() : team.trim();
+		})
+		.filter((team) => team.length > 0);
+
+	return teams;
+}
+
+// Helper to parse event categories
+function parseEventCategories(categoriesString: string): EVENT_CATEGORY[] {
+	const categoryStrings = parseCSVField(categoriesString);
+	const validCategories: EVENT_CATEGORY[] = [];
+
+	for (const cat of categoryStrings) {
+		const upperCat = cat.toUpperCase().replace(/\s+/g, "_");
+		if (
+			Object.values(EVENT_CATEGORY).includes(upperCat as EVENT_CATEGORY)
+		) {
+			validCategories.push(upperCat as EVENT_CATEGORY);
+		}
+	}
+
+	return validCategories;
+}
 
 async function seedCampuses(campusNames: Set<string>) {
 	log.info("Seeding campuses...");
@@ -52,6 +102,25 @@ async function seedCampuses(campusNames: Set<string>) {
 	}
 
 	log.info(`✓ ${campusNames.size} campuses seeded`);
+}
+
+async function seedTeams(teamNames: Set<string>) {
+	log.info("Seeding teams...");
+
+	for (const teamName of teamNames) {
+		if (!teamName) continue;
+
+		await prisma.team.upsert({
+			where: { name: teamName },
+			create: {
+				uid: generateUID("TEAM_"),
+				name: teamName,
+			},
+			update: {},
+		});
+	}
+
+	log.info(`✓ ${teamNames.size} teams seeded`);
 }
 
 async function seedUsers() {
@@ -74,24 +143,32 @@ async function seedUsers() {
 				try {
 					log.info("Processing users CSV...");
 
-					// First, collect unique campus names and seed them
+					// First, collect unique campus names and team names
 					const campusNames = new Set(
 						users.map((u) => u.Campus).filter(Boolean),
 					);
+					const allTeamNames = new Set<string>();
+
+					users.forEach((user) => {
+						const teams = parseTeamNames(user.Associated_Teams);
+						teams.forEach((team) => allTeamNames.add(team));
+					});
+
 					await seedCampuses(campusNames);
+					await seedTeams(allTeamNames);
 
 					// Now seed users
 					for (const row of users) {
-						const {
-							First_Name,
-							Middle_Name,
-							Last_Name,
-							Email,
-							Phone,
-							Campus,
-							Role,
-							Timestamp,
-						} = row;
+						const First_Name = row.First_Name?.trim() || "";
+						const Middle_Name = row.Middle_Name?.trim() || "";
+						const Last_Name = row.Last_Name?.trim() || "";
+						const Email = row.Email?.trim() || "";
+						const Phone = row.Phone?.trim() || "";
+						const Campus = row.Campus?.trim() || "";
+						const Role = row.Role?.trim() as keyof typeof ROLE;
+						const Event_Category = row.Event_Category?.trim() || "";
+						const Associated_Teams = row.Associated_Teams?.trim() ||
+							"";
 
 						// Validate role
 						if (!Object.keys(ROLE).includes(Role)) {
@@ -118,10 +195,11 @@ async function seedUsers() {
 								break;
 						}
 
+						// Generate password with current timestamp
 						const password = generatePassword(
 							prefix,
 							First_Name,
-							Timestamp,
+							new Date().toISOString(),
 						);
 						const fullName =
 							`${First_Name} ${Middle_Name} ${Last_Name}`
@@ -138,7 +216,13 @@ async function seedUsers() {
 							campusId = campus?.id;
 						}
 
-						await prisma.user.upsert({
+						// Parse event categories and teams
+						const eventCategories = parseEventCategories(
+							Event_Category,
+						);
+						const teamNames = parseTeamNames(Associated_Teams);
+
+						const user = await prisma.user.upsert({
 							where: { p_email: Email },
 							create: {
 								uid: generateUID(prefix),
@@ -159,8 +243,53 @@ async function seedUsers() {
 							},
 						});
 
+						// Assign event categories to user
+						for (const category of eventCategories) {
+							await prisma.userCategory.upsert({
+								where: {
+									userId_category: {
+										userId: user.id,
+										category: category,
+									},
+								},
+								create: {
+									userId: user.id,
+									category: category,
+								},
+								update: {},
+							});
+						}
+
+						// Assign teams to user
+						for (const teamName of teamNames) {
+							const team = await prisma.team.findUnique({
+								where: { name: teamName },
+								select: { id: true },
+							});
+
+							if (team) {
+								await prisma.userTeam.upsert({
+									where: {
+										userId_teamId: {
+											userId: user.id,
+											teamId: team.id,
+										},
+									},
+									create: {
+										userId: user.id,
+										teamId: team.id,
+									},
+									update: {},
+								});
+							}
+						}
+
 						log.info(
-							`✓ User seeded: ${Email} (${Role}) - Password: ${password}`,
+							`✓ User seeded: ${Email} (${Role}) - Password: ${password} - Teams: ${
+								teamNames.join(", ") || "None"
+							} - Categories: ${
+								eventCategories.join(", ") || "None"
+							}`,
 						);
 					}
 

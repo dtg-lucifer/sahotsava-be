@@ -26,6 +26,19 @@ enum TICKET_STATUS {
     CANCELLED
 }
 
+enum EVENT_CATEGORY {
+    ALL_ACCESS
+    FASHION_EVENTS
+    DANCING_EVENTS
+    DRAMA_EVENTS
+    LITERARY_EVENTS
+    PHOTOGRAPHY_EVENTS
+    MOVIE_EVENTS
+    ART_EVENTS
+    MUSIC_EVENTS
+    DESIGNING_EVENTS
+}
+
 model User {
     id                     String         @id @default(uuid())
     uid                    String         @unique @db.VarChar(50)
@@ -50,6 +63,8 @@ model User {
     lead_event             Event?         @relation("DomainLead")
     issued_tickets         Ticket[]       @relation("DomainLeadIssues")
     checked_in_tickets     Ticket[]       @relation("CheckedInBy")
+    user_teams             UserTeam[]
+    user_categories        UserCategory[]
     // --------------------------
 
     @@index([email])
@@ -157,4 +172,49 @@ model Ticket {
     @@index([checkedInById])
     // --------------------------
     @@map("tickets")
+}
+
+model Team {
+    id         String     @id @default(uuid())
+    uid        String     @unique @db.VarChar(50)
+    name       String     @unique @db.VarChar(255)
+    createdAt  DateTime   @default(now())
+    updatedAt  DateTime   @updatedAt
+    deletedAt  DateTime?
+    user_teams UserTeam[]
+    // --------------------------
+
+    @@index([name])
+    @@index([uid])
+    // --------------------------
+    @@map("teams")
+}
+
+model UserTeam {
+    user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId    String
+    team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+    teamId    String
+    createdAt DateTime @default(now())
+    // --------------------------
+
+    @@id([userId, teamId])
+    @@index([userId])
+    @@index([teamId])
+    // --------------------------
+    @@map("user_teams")
+}
+
+model UserCategory {
+    user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId    String
+    category  EVENT_CATEGORY
+    createdAt DateTime       @default(now())
+    // --------------------------
+
+    @@id([userId, category])
+    @@index([userId])
+    @@index([category])
+    // --------------------------
+    @@map("user_categories")
 }
