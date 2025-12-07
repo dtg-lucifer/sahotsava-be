@@ -13,10 +13,16 @@ import fs from "fs";
 import path from "path";
 
 import { EVENT_CATEGORY, PrismaClient, ROLE } from "../generated/prisma/client";
-import { generatePassword } from "../lib/password";
+import { generatePassword, hashPassword } from "../lib/password";
 import { generateUID } from "../lib/uid";
 import { log } from "../middlewares";
 import { EventCSVRow, UserCSVRow } from "../utils/types";
+import {
+	exportCredentialsToCSV,
+	parseCSVField,
+	parseEventCategories,
+	parseTeamNames,
+} from "../utils/seed_utility";
 import { PrismaPg } from "@prisma/adapter-pg";
 
 dotenv.config();
@@ -31,58 +37,21 @@ const prisma = new PrismaClient({
 });
 
 // File paths
-const usersFilePath = path.join(__dirname, "data", "users_clean.csv");
+const usersFilePath = path.join(__dirname, "data", "users.csv");
 const eventsFilePath = path.join(__dirname, "data", "events.csv");
+const credentialsFilePath = path.join(
+	__dirname,
+	"data",
+	"user_credentials.csv",
+);
 
-// Helper to parse comma-separated values with proper trimming
-function parseCSVField(field: string): string[] {
-	if (!field || field.trim() === "") return [];
-	// Remove surrounding quotes if present
-	const cleanedField = field.replace(/^["']|["']$/g, "").trim();
-	if (!cleanedField) return [];
-
-	return cleanedField
-		.split(",")
-		.map((item) => item.trim())
-		.filter((item) => item.length > 0);
-}
-
-// Helper to extract team names from complex format like "Team Phoenix(Fashion Team)"
-function parseTeamNames(teamsString: string): string[] {
-	if (!teamsString || teamsString.trim() === "") return [];
-
-	// Remove surrounding quotes if present
-	const cleanedString = teamsString.replace(/^["']|["']$/g, "").trim();
-	if (!cleanedString) return [];
-
-	const teams = cleanedString
-		.split(",")
-		.map((team) => {
-			// Extract team name before parenthesis or use full string if no parenthesis
-			const match = team.trim().match(/^([^(]+)/);
-			return match ? match[1].trim() : team.trim();
-		})
-		.filter((team) => team.length > 0);
-
-	return teams;
-}
-
-// Helper to parse event categories
-function parseEventCategories(categoriesString: string): EVENT_CATEGORY[] {
-	const categoryStrings = parseCSVField(categoriesString);
-	const validCategories: EVENT_CATEGORY[] = [];
-
-	for (const cat of categoryStrings) {
-		const upperCat = cat.toUpperCase().replace(/\s+/g, "_");
-		if (
-			Object.values(EVENT_CATEGORY).includes(upperCat as EVENT_CATEGORY)
-		) {
-			validCategories.push(upperCat as EVENT_CATEGORY);
-		}
-	}
-
-	return validCategories;
-}
+// Store user credentials for export
+const userCredentials: Array<{
+	name: string;
+	email: string;
+	role: string;
+	password: string;
+}> = [];
 
 async function seedCampuses(campusNames: Set<string>) {
 	log.info("Seeding campuses...");
@@ -135,7 +104,11 @@ async function seedUsers() {
 		}
 
 		fs.createReadStream(usersFilePath)
-			.pipe(csvParser())
+			.pipe(csvParser({
+				mapHeaders: ({ header }) =>
+					header.replace(/^\uFEFF/, "").trim(),
+				skipLines: 0,
+			}))
 			.on("data", (row: UserCSVRow) => {
 				users.push(row);
 			})
@@ -222,6 +195,17 @@ async function seedUsers() {
 						);
 						const teamNames = parseTeamNames(Associated_Teams);
 
+						// Hash the password before storing
+						const hashedPassword = await hashPassword(password);
+
+						// Store credentials for export
+						userCredentials.push({
+							name: fullName,
+							email: Email,
+							role: Role,
+							password: password, // Plain text for admin reference
+						});
+
 						const user = await prisma.user.upsert({
 							where: { p_email: Email },
 							create: {
@@ -230,7 +214,7 @@ async function seedUsers() {
 								email: Email,
 								name: fullName,
 								phone: Phone || null,
-								password: password,
+								password: hashedPassword,
 								role: Role as ROLE,
 								is_verified: true, // Auto-verify seed users
 								campusId: campusId || null,
@@ -294,6 +278,13 @@ async function seedUsers() {
 					}
 
 					log.info(`✓ ${users.length} users processed successfully`);
+
+					// Export user credentials to CSV
+					exportCredentialsToCSV(
+						userCredentials,
+						credentialsFilePath,
+					);
+
 					resolve();
 				} catch (error) {
 					log.error("Error processing users:", error);
@@ -406,15 +397,6 @@ async function main() {
 	try {
 		log.info("🌱 Starting database seeding...");
 
-		const campuses: Set<string> = new Set();
-		campuses.add("TIU001");
-		campuses.add("IEM001");
-		campuses.add("SNU001");
-		campuses.add("AMITY001");
-		campuses.add("IIHM001");
-		campuses.add("NSBIHM001");
-
-		await seedCampuses(campuses);
 		await seedUsers();
 		await seedEvents();
 

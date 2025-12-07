@@ -13,7 +13,7 @@ import {
 	requestid_middleware,
 	winston_logger,
 } from "./middlewares";
-import { healthcheck_router } from "./routes";
+import { auth_router, events_router, healthcheck_router } from "./routes";
 import { Cache } from "./utils/cache";
 
 export interface ServerCfg {
@@ -33,7 +33,10 @@ export class Server {
 
 	constructor(cfg: Partial<ServerCfg>) {
 		this.app = express();
-		this.config = Object.assign<ServerCfg, Partial<ServerCfg>>(this.#defaultConfig(), cfg);
+		this.config = Object.assign<ServerCfg, Partial<ServerCfg>>(
+			this.#defaultConfig(),
+			cfg,
+		);
 		this.prisma = null;
 		this.redis = null;
 		this.adapter = null;
@@ -45,7 +48,9 @@ export class Server {
 			api_prefix: "/api/v1",
 			cache: {},
 			origins: ["localhost:3000"],
-			listen_addr: `http://${Bun.env.HOST || "localhost"}:${Bun.env.PORT || "8989"}`,
+			listen_addr: `http://${Bun.env.HOST || "localhost"}:${
+				Bun.env.PORT || "8989"
+			}`,
 		};
 	}
 
@@ -77,7 +82,9 @@ export class Server {
 		const missing = required.filter((key) => !Bun.env[key]);
 
 		if (missing.length > 0) {
-			const error = `Missing required environment variables: ${missing.join(", ")}`;
+			const error = `Missing required environment variables: ${
+				missing.join(", ")
+			}`;
 			log.error(error);
 			throw new Error(error);
 		}
@@ -94,7 +101,9 @@ export class Server {
 			}
 
 			// Prisma + PostgreSQL setup with connection pooling
-			this.adapter = new PrismaPg({ connectionString: Bun.env.DATABASE_URL! });
+			this.adapter = new PrismaPg({
+				connectionString: Bun.env.DATABASE_URL!,
+			});
 			this.prisma = new PrismaClient({
 				adapter: this.adapter,
 				log: [
@@ -123,7 +132,10 @@ export class Server {
 					enableTrace: true,
 				},
 			});
-			this.redis.on("error", (err) => log.error("Redis Client Error", err));
+			this.redis.on(
+				"error",
+				(err) => log.error("Redis Client Error", err),
+			);
 
 			await this.redis.connect();
 			log.info("Connected to Redis successfully");
@@ -136,6 +148,20 @@ export class Server {
 	// Setup routes
 	#setupRoutes() {
 		this.app.use(this.config.api_prefix, healthcheck_router); // Healthcheck route
+		if (this.prisma && this.redis) {
+			this.app.use(
+				this.config.api_prefix + "/auth",
+				auth_router(this.prisma, this.redis),
+			); // Authentication routes
+			this.app.use(
+				this.config.api_prefix + "/events",
+				events_router(this.prisma, this.redis),
+			); // Events routes
+		} else {
+			log.warn(
+				"Prisma or Redis not initialized. Auth and Events routes not registered.",
+			);
+		}
 	}
 
 	#setupMiddlewares() {
@@ -168,7 +194,8 @@ export class Server {
 			rateLimit({
 				windowMs: 15 * 60 * 1000, // 15 minutes
 				max: 100, // Limit each IP to 100 requests per windowMs
-				message: "Too many requests from this IP, please try again later.",
+				message:
+					"Too many requests from this IP, please try again later.",
 				standardHeaders: true,
 				legacyHeaders: false,
 			}),
@@ -193,7 +220,9 @@ export class Server {
 		// Dependency injection - must be registered after other middlewares
 		// but before routes to ensure dependencies are available in all route handlers
 		if (this.prisma && this.redis) {
-			this.app.use(createDependencyInjectionMiddleware(this.prisma, this.redis));
+			this.app.use(
+				createDependencyInjectionMiddleware(this.prisma, this.redis),
+			);
 			log.info("Dependency injection middleware registered");
 		} else {
 			log.warn(

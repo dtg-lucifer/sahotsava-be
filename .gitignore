@@ -46,3 +46,6 @@ package-lock.json
 **/*.bun
 
 /src/generated/prisma
+
+# Sensitive data - user credentials
+/src/db/data/user_credentials.csv
