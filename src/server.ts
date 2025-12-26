@@ -48,9 +48,7 @@ export class Server {
 			api_prefix: "/api/v1",
 			cache: {},
 			origins: ["localhost:3000"],
-			listen_addr: `http://${Bun.env.HOST || "localhost"}:${
-				Bun.env.PORT || "8989"
-			}`,
+			listen_addr: `http://${Bun.env.HOST || "localhost"}:${Bun.env.PORT || "8989"}`,
 		};
 	}
 
@@ -82,9 +80,8 @@ export class Server {
 		const missing = required.filter((key) => !Bun.env[key]);
 
 		if (missing.length > 0) {
-			const error = `Missing required environment variables: ${
-				missing.join(", ")
-			}`;
+			const error = `Missing required environment variables: ${missing.join(", ")
+				}`;
 			log.error(error);
 			throw new Error(error);
 		}

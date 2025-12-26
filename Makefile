@@ -18,6 +18,12 @@ setup:
 	bun install
 	bun run prisma:generate
 
+seed:
+	bun run db:seed
+
+deseed:
+	bun run db:deseed
+
 # Generate the prisma client
 prisma-generate:
 	bun run prisma:generate
